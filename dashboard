@@ -1,0 +1,49 @@
+from flask import Flask, render_template_string
+import json
+from collections import Counter
+
+app = Flask(vivek desai)
+
+file_path = "var/log/cowrie/cowrie.json"
+
+def analyze():
+    ips = []
+    commands = []
+
+    with open(file_path, "r") as file:
+        for line in file:
+            data = json.loads(line)
+
+            if "src_ip" in data:
+                ips.append(data["src_ip"])
+
+            if "input" in data:
+                commands.append(data["input"])
+
+    return Counter(ips).most_common(5), Counter(commands).most_common(5)
+
+@app.route("/")
+def home():
+    top_ips, top_cmds = analyze()
+
+    html = """
+    <h1> Cowrie Honeypot Dashboard</h1>
+
+    <h2>Top Attacker IPs</h2>
+    <ul>
+    {% for ip, count in ips %}
+        <li>{{ip}} → {{count}} attacks</li>
+    {% endfor %}
+    </ul>
+
+    <h2>Top Commands Used</h2>
+    <ul>
+    {% for cmd, count in cmds %}
+        <li>{{cmd}} → {{count}} times</li>
+    {% endfor %}
+    </ul>
+    """
+
+    return render_template_string(html, ips=top_ips, cmds=top_cmds)
+
+app.run(host="0.0.0.0", port=5000)
